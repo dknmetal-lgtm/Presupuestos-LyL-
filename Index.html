@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L&L Renovation Group — Presupuestos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #0a3d62;
+    --primary-dark: #072c47;
+    --accent: #22b8cf;
+    --yellow: #ffd43b;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --warning: #d97706;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+  }
+  header {
+    background: var(--primary); color: #fff; padding: 18px 30px;
+    display: flex; align-items: center; gap: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .logo-mark { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+  .logo-mark .ll { font-family: Georgia, serif; font-size: 28px; font-weight: bold; }
+  .logo-mark .ren { font-size: 8px; letter-spacing: 3px; color: var(--accent); margin-top: 3px; }
+  .logo-mark .grp { font-size: 7px; letter-spacing: 2px; color: var(--yellow); font-style: italic; margin-top: 1px; }
+  header h1 { font-size: 19px; font-weight: 600; }
+  header .subtitle { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+  nav.tabs {
+    background: var(--card); display: flex; padding: 0 20px;
+    border-bottom: 1px solid var(--border); gap: 4px; overflow-x: auto;
+  }
+  nav.tabs button {
+    background: transparent; border: none; padding: 14px 20px;
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+    font-family: inherit; white-space: nowrap;
+  }
+  nav.tabs button:hover { color: var(--primary); }
+  nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: 10px; padding: 24px;
+    margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 15px; margin-bottom: 16px; color: var(--primary);
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .form-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 12px;
+  }
+  label {
+    display: block; font-size: 11px; font-weight: 700; color: var(--muted);
+    margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  input, select, textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 14px; font-family: inherit;
+    color: var(--text); background: #fff; transition: border 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(34,184,207,0.15);
+  }
+  textarea { resize: vertical; min-height: 85px; }
+
+  .btn {
+    padding: 10px 18px; border-radius: 6px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: #1a98ab; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #15803d; }
+  .btn-warning { background: var(--warning); color: #fff; }
+  .btn-warning:hover { background: #b45309; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-ghost { background: transparent; color: var(--primary); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th {
+    background: #f8fafc; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--muted); font-weight: 700;
+  }
+  td input { padding: 6px 8px; font-size: 13px; }
+  td.subtotal { font-weight: 600; text-align: right; white-space: nowrap; }
+  .right { text-align: right; }
+
+  .totals-box {
+    margin-top: 16px; padding: 16px; background: #f8fafc;
+    border-radius: 8px; border: 1px solid var(--border);
+  }
+  .totals-box .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+  .totals-box .row.total {
+    border-top: 2px solid var(--primary); margin-top: 8px;
+    padding-top: 12px; font-size: 18px; font-weight: 700; color: var(--primary);
+  }
+
+  .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 14px; }
+
+  .client-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 8px; background: #fff; gap: 12px;
+  }
+  .client-item .info { flex: 1; min-width: 0; }
+  .client-item .name { font-weight: 600; margin-bottom: 3px; }
+  .client-item .details { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .client-item .actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+
+  .actions-bar {
+    display: flex; gap: 10px; justify-content: flex-end;
+    margin-top: 16px; flex-wrap: wrap;
+  }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; padding: 24px;
+    max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 18px; margin-bottom: 16px; color: var(--primary); }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+  #logoPreview {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 120px; padding: 16px; border: 2px dashed var(--border);
+    border-radius: 8px; background: #f8fafc;
+  }
+  #logoPreview img { max-width: 100%; max-height: 120px; display: block; }
+
+  .edit-banner {
+    background: #fff3cd; border: 1px solid #ffc107; color: #856404;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;
+    display: none; justify-content: space-between; align-items: center;
+    gap: 12px; flex-wrap: wrap; font-size: 14px;
+  }
+
+  .balance-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .balance-card {
+    padding: 18px; border-radius: 10px;
+    background: #f8fafc; border: 1px solid var(--border);
+  }
+  .balance-card.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff; border-color: var(--primary);
+  }
+  .balance-card.danger { background: #fef2f2; border-color: #fecaca; }
+  .balance-card.success { background: #f0fdf4; border-color: #bbf7d0; }
+  .balance-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; opacity: 0.85; margin-bottom: 8px;
+  }
+  .balance-value { font-size: 24px; font-weight: 700; line-height: 1.2; }
+
+  .balance-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .balance-details .item label { margin-bottom: 4px; }
+  .balance-details .item .val { font-size: 16px; font-weight: 600; }
+
+  .modified-badge {
+    display: inline-block; font-size: 10px; padding: 2px 6px;
+    background: var(--warning); color: #fff; border-radius: 4px;
+    margin-left: 6px; font-weight: 700; vertical-align: middle;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 14px 16px; gap: 14px; }
+    header h1 { font-size: 15px; }
+    header .subtitle { font-size: 11px; }
+    main { padding: 14px 12px; }
+    .card { padding: 16px; }
+    th, td { padding: 8px 6px; font-size: 12px; }
+    .client-item { flex-direction: column; align-items: stretch; }
+    .client-item .actions { justify-content: flex-end; }
+    .balance-value { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <div class="ll">L&amp;L</div>
+    <div class="ren">RENOVATION</div>
+    <div class="grp">GROUP</div>
+  </div>
+  <div>
+    <h1>Sistema de Presupuestos</h1>
+    <div class="subtitle">Multiservicios · Chacras · Casas · Campos</div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="active" data-tab="presupuesto">Nuevo Presupuesto</button>
+  <button data-tab="clientes">Clientes</button>
+  <button data-tab="historial">Historial</button>
+  <button data-tab="balance">Balance Mensual</button>
+  <button data-tab="config">Configuración</button>
+</nav>
+
+<main>
+
+<!-- ================== TAB PRESUPUESTO ================== -->
+<div class="tab-content active" id="tab-presupuesto">
+
+  <div class="edit-banner" id="editBanner">
+    <div>✏️ <strong>Editando presupuesto <span id="editQuoteNum"></span></strong> — al generar el PDF se actualizará el presupuesto original.</div>
+    <button class="btn btn-sm btn-warning" onclick="cancelEdit()">Cancelar edición</button>
+  </div>
+
+  <div class="card">
+    <h2>Datos del Presupuesto</h2>
+    <div class="form-row">
+      <div>
+        <label>N° Presupuesto</label>
+        <input type="text" id="quoteNumber">
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input type="date" id="quoteDate">
+      </div>
+    </div>
+    <div class="form-row">
+      <div style="grid-column: 1 / -1;">
+        <label>Cliente *</label>
+        <div style="display: flex; gap: 8px;">
+          <select id="clientSelect" style="flex: 1;"></select>
+          <button class="btn btn-ghost btn-sm" onclick="openClientModal()">+ Nuevo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Descripción del Trabajo</h2>
+    <textarea id="workDesc" placeholder="Ej: Colocación de piso cerámico en living, reparación de instalación eléctrica en cocina, construcción de cerco de madera en el frente, etc."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Materiales</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 45%;">Material / Descripción</th>
+          <th style="width: 15%;">Cant.</th>
+          <th style="width: 20%;">Precio Unit.</th>
+          <th style="width: 15%;" class="right">Subtotal</th>
+          <th style="width: 5%;"></th>
+        </tr>
+      </thead>
+      <tbody id="materialsBody"></tbody>
+    </table>
+    <div class="empty" id="materialsEmpty">Todavía no agregaste materiales.</div>
+    <div style="margin-top: 12px;">
+      <button class="btn btn-accent btn-sm" onclick="addMaterialRow()">+ Agregar Material</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Costos Adicionales</h2>
+    <div class="form-row">
+      <div>
+        <label>Mano de obra ($)</label>
+        <input type="number" id="laborCost" value="0" min="0" step="0.01" oninput="updateTotals()">
+      </div>
+      <div>
+        <label>Otros costos ($)</label>
+        <input type="number" id="otherCost" value="0" min="0" step="0.01" oninput="updateTotals()">
+      </div>
+    </div>
+    <div class="totals-box">
+      <div class="row"><span>Materiales</span><span id="totMat">$ 0,00</span></div>
+      <div class="row"><span>Mano de obra</span><span id="totLabor">$ 0,00</span></div>
+      <div class="row"><span>Otros</span><span id="totOther">$ 0,00</span></div>
+      <div class="row total"><span>TOTAL</span><span id="totTotal">$ 0,00</span></div>
+    </div>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn btn-ghost" onclick="resetForm()">Limpiar</button>
+    <button class="btn btn-success" id="pdfBtn" onclick="generatePDF()">📄 Generar PDF</button>
+  </div>
+
+</div>
+
+<!-- ================== TAB CLIENTES ================== -->
+<div class="tab-content" id="tab-clientes">
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap;">
+      <h2 style="margin: 0; border: none; padding: 0;">Clientes Guardados</h2>
+      <button class="btn btn-primary btn-sm" onclick="openClientModal()">+ Nuevo Cliente</button>
+    </div>
+    <div id="clientsList"></div>
+  </div>
+</div>
+
+<!-- ================== TAB HISTORIAL ================== -->
+<div class="tab-content" id="tab-historial">
+  <div class="card">
+    <h2>Presupuestos Generados</h2>
+    <div id="quotesList"></div>
+  </div>
+</div>
+
+<!-- ================== TAB BALANCE ================== -->
+<div class="tab-content" id="tab-balance">
+
+  <div class="card">
+    <h2>Seleccionar Período</h2>
+    <div class="form-row">
+      <div>
+        <label>Mes</label>
+        <select id="balanceMonth"></select>
+      </div>
+      <div>
+        <label>Año</label>
+        <select id="balanceYear"></select>
+      </div>
+      <div style="display: flex; align-items: flex-end;">
+        <button class="btn btn-accent btn-sm" onclick="exportMonthToExcel()" style="width: 100%;">📥 Exportar este mes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Resumen del Mes</h2>
+    <div class="balance-cards">
+      <div class="balance-card primary">
+        <div class="balance-label">Total Facturado (Bruto)</div>
+        <div class="balance-value" id="bTotal">$ 0,00</div>
+      </div>
+      <div class="balance-card danger">
+        <div class="balance-label">Gastos en Materiales</div>
+        <div class="balance-value" id="bMat" style="color: var(--danger);">$ 0,00</div>
+      </div>
+      <div class="balance-card success">
+        <div class="balance-label">Ganancia Bruta</div>
+        <div class="balance-value" id="bProfit" style="color: var(--success);">$ 0,00</div>
+      </div>
+    </div>
+    <div class="balance-details">
+      <div class="item">
+        <label>Mano de obra</label>
+        <div class="val" id="bLabor">$ 0,00</div>
+      </div>
+      <div class="item">
+        <label>Otros costos</label>
+        <div class="val" id="bOther">$ 0,00</div>
+      </div>
+      <div class="item">
+        <label>Cantidad presupuestos</label>
+        <div class="val" id="bCount">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Detalle de Presupuestos del Mes</h2>
+    <div id="balanceQuotesList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Histórico Mensual</h2>
+    <div id="balanceHistory"></div>
+  </div>
+
+</div>
+
+<!-- ================== TAB CONFIGURACIÓN ================== -->
+<div class="tab-content" id="tab-config">
+
+  <div class="card">
+    <h2>Logo para el PDF</h2>
+    <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6;">
+      Subí el logo de <strong>L&amp;L Renovation Group</strong>. Se guarda en este navegador y aparece en la cabecera de todos los PDFs.<br>
+      <span style="font-size: 12px;">Recomendado: <strong>PNG</strong> con fondo blanco o transparente, mínimo 400&nbsp;px de ancho, máximo 2&nbsp;MB.</span>
+    </p>
+    <div id="logoPreview"></div>
+    <div class="form-row" style="margin-top: 16px;">
+      <div style="grid-column: 1 / -1;">
+        <label>Subir imagen del logo</label>
+        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/jpg" onchange="handleLogoUpload(event)">
+      </div>
+    </div>
+    <div class="actions-bar">
+      <button class="btn btn-danger" id="removeLogoBtn" onclick="removeLogo()" style="display:none;">Quitar Logo</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Respaldo y Restauración (Excel)</h2>
+    <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6;">
+      Descargá un archivo Excel con <strong>todos tus datos</strong> (clientes, presupuestos, materiales y balance histórico).
+      Guardalo en Google Drive, pendrive o donde quieras como respaldo. Si cambiás de navegador o compu,
+      podés importarlo acá y recuperar todo.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+      <div style="padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+        <h3 style="font-size: 13px; color: var(--success); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📤 Exportar</h3>
+        <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Descargá un archivo <code>.xlsx</code> con todos los datos.</p>
+        <button class="btn btn-success btn-sm" onclick="exportAllToExcel()" style="width: 100%;">Descargar Backup Completo</button>
+      </div>
+      <div style="padding: 16px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;">
+        <h3 style="font-size: 13px; color: var(--warning); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">📥 Importar</h3>
+        <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Restaurá datos desde un archivo de respaldo. <strong>Reemplaza todo.</strong></p>
+        <input type="file" id="importExcelFile" accept=".xlsx,.xls" onchange="importFromExcel(event)" style="display: none;">
+        <button class="btn btn-warning btn-sm" onclick="document.getElementById('importExcelFile').click()" style="width: 100%;">Seleccionar archivo…</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</main>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal">
+    <h3 id="clientModalTitle">Nuevo Cliente</h3>
+    <input type="hidden" id="editClientId">
+    <div class="form-row">
+      <div style="grid-column: 1 / -1;">
+        <label>Nombre *</label>
+        <input type="text" id="clientName" placeholder="Ej: Juan Pérez">
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Teléfono</label>
+        <input type="text" id="clientPhone" placeholder="Ej: 11 2345-6789">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="clientEmail" placeholder="cliente@mail.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div style="grid-column: 1 / -1;">
+        <label>Dirección / Ubicación</label>
+        <input type="text" id="clientAddress" placeholder="Ej: Ruta 8 km 45, Chacra La Esperanza">
+      </div>
+    </div>
+    <div class="form-row">
+      <div style="grid-column: 1 / -1;">
+        <label>Notas</label>
+        <textarea id="clientNotes" style="min-height: 60px;" placeholder="Datos extra, referencias, horarios, etc."></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeClientModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveClient()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================ STORAGE ============================ */
+const store = {
+  get(key, def) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+    catch { return def; }
+  },
+  set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+};
+
+let clients = store.get('ll_clients', []);
+let quotes  = store.get('ll_quotes', []);
+let materials = [];
+let logoBase64 = store.get('ll_logo', null);
+let editingQuoteId = null;
+
+/* ============================ UTILS ============================ */
+function formatMoney(n) {
+  n = Number(n) || 0;
+  return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function formatDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function nextQuoteNumber() {
+  const year = new Date().getFullYear();
+  const count = quotes.filter(q => q.date && q.date.startsWith(year)).length + 1;
+  return `P-${year}-${String(count).padStart(3, '0')}`;
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+/* ============================ TABS ============================ */
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'clientes') renderClients();
+    if (btn.dataset.tab === 'historial') renderQuotes();
+    if (btn.dataset.tab === 'balance') renderBalance();
+    if (btn.dataset.tab === 'config') renderLogoPreview();
+  });
+});
+
+/* ============================ CLIENTES ============================ */
+function openClientModal(client = null) {
+  document.getElementById('clientModalTitle').textContent = client ? 'Editar Cliente' : 'Nuevo Cliente';
+  document.getElementById('editClientId').value = client ? client.id : '';
+  document.getElementById('clientName').value = client ? client.name : '';
+  document.getElementById('clientPhone').value = client ? (client.phone || '') : '';
+  document.getElementById('clientEmail').value = client ? (client.email || '') : '';
+  document.getElementById('clientAddress').value = client ? (client.address || '') : '';
+  document.getElementById('clientNotes').value = client ? (client.notes || '') : '';
+  document.getElementById('clientModal').classList.add('active');
+  setTimeout(() => document.getElementById('clientName').focus(), 50);
+}
+function closeClientModal() { document.getElementById('clientModal').classList.remove('active'); }
+
+function saveClient() {
+  const id = document.getElementById('editClientId').value;
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) { alert('El nombre es obligatorio'); return; }
+
+  const data = {
+    id: id || uid(),
+    name,
+    phone: document.getElementById('clientPhone').value.trim(),
+    email: document.getElementById('clientEmail').value.trim(),
+    address: document.getElementById('clientAddress').value.trim(),
+    notes: document.getElementById('clientNotes').value.trim()
+  };
+  if (id) {
+    const i = clients.findIndex(c => c.id === id);
+    if (i >= 0) clients[i] = data;
+  } else {
+    clients.push(data);
+  }
+  store.set('ll_clients', clients);
+  closeClientModal();
+  refreshClientSelect();
+  if (document.getElementById('tab-clientes').classList.contains('active')) renderClients();
+}
+function deleteClient(id) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  clients = clients.filter(c => c.id !== id);
+  store.set('ll_clients', clients);
+  refreshClientSelect();
+  renderClients();
+}
+function editClient(id) {
+  const c = clients.find(x => x.id === id);
+  if (c) openClientModal(c);
+}
+function refreshClientSelect() {
+  const sel = document.getElementById('clientSelect');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Seleccionar cliente —</option>';
+  clients.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.address ? ' — ' + c.address : '');
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+function renderClients() {
+  const list = document.getElementById('clientsList');
+  if (clients.length === 0) {
+    list.innerHTML = '<div class="empty">No hay clientes guardados todavía.<br><br><button class="btn btn-primary btn-sm" onclick="openClientModal()">+ Agregar primer cliente</button></div>';
+    return;
+  }
+  list.innerHTML = clients.map(c => `
+    <div class="client-item">
+      <div class="info">
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="details">
+          ${c.phone ? '📞 ' + escapeHtml(c.phone) : ''}
+          ${c.email ? ' · ✉️ ' + escapeHtml(c.email) : ''}
+          ${c.address ? '<br>📍 ' + escapeHtml(c.address) : ''}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="editClient('${c.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteClient('${c.id}')">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================ MATERIALES ============================ */
+function addMaterialRow(data = null) {
+  materials.push(data || { id: uid(), desc: '', qty: 1, price: 0 });
+  renderMaterials();
+}
+function removeMaterialRow(id) {
+  materials = materials.filter(m => m.id !== id);
+  renderMaterials();
+}
+function updateMaterial(id, field, value) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
+  m[field] = value;
+  const row = document.querySelector(`[data-mat-row="${id}"]`);
+  if (row) row.querySelector('.subtotal').textContent = formatMoney(m.qty * m.price);
+  updateTotals();
+}
+function renderMaterials() {
+  const body = document.getElementById('materialsBody');
+  const empty = document.getElementById('materialsEmpty');
+  if (materials.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    body.innerHTML = materials.map(m => `
+      <tr data-mat-row="${m.id}">
+        <td><input type="text" value="${escapeHtml(m.desc)}" placeholder="Ej: Cemento 50kg" oninput="updateMaterial('${m.id}', 'desc', this.value)"></td>
+        <td><input type="number" min="0" step="0.01" value="${m.qty}" oninput="updateMaterial('${m.id}', 'qty', this.value)"></td>
+        <td><input type="number" min="0" step="0.01" value="${m.price}" oninput="updateMaterial('${m.id}', 'price', this.value)"></td>
+        <td class="subtotal right">${formatMoney(m.qty * m.price)}</td>
+        <td style="text-align:center;"><button class="btn btn-danger btn-sm" onclick="removeMaterialRow('${m.id}')" title="Eliminar">✕</button></td>
+      </tr>
+    `).join('');
+  }
+  updateTotals();
+}
+function updateTotals() {
+  const matTotal = materials.reduce((s, m) => s + (Number(m.qty) || 0) * (Number(m.price) || 0), 0);
+  const labor = parseFloat(document.getElementById('laborCost').value) || 0;
+  const other = parseFloat(document.getElementById('otherCost').value) || 0;
+  document.getElementById('totMat').textContent = formatMoney(matTotal);
+  document.getElementById('totLabor').textContent = formatMoney(labor);
+  document.getElementById('totOther').textContent = formatMoney(other);
+  document.getElementById('totTotal').textContent = formatMoney(matTotal + labor + other);
+}
+
+/* ============================ EDIT MODE ============================ */
+function editQuote(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+  editingQuoteId = id;
+
+  document.getElementById('quoteNumber').value = q.quoteNumber;
+  document.getElementById('quoteDate').value = q.date;
+  document.getElementById('clientSelect').value = q.clientId;
+  document.getElementById('workDesc').value = q.description || '';
+  document.getElementById('laborCost').value = q.labor || 0;
+  document.getElementById('otherCost').value = q.other || 0;
+  materials = (q.materials || []).map(m => ({ ...m, id: uid() }));
+  renderMaterials();
+  updateTotals();
+
+  const banner = document.getElementById('editBanner');
+  document.getElementById('editQuoteNum').textContent = q.quoteNumber;
+  banner.style.display = 'flex';
+  document.getElementById('pdfBtn').textContent = '💾 Actualizar y Regenerar PDF';
+
+  document.querySelector('nav.tabs button[data-tab="presupuesto"]').click();
+}
+function cancelEdit() {
+  editingQuoteId = null;
+  document.getElementById('editBanner').style.display = 'none';
+  document.getElementById('pdfBtn').textContent = '📄 Generar PDF';
+  resetForm(true);
+}
+function duplicateQuote(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+  editingQuoteId = null;
+  document.getElementById('editBanner').style.display = 'none';
+  document.getElementById('pdfBtn').textContent = '📄 Generar PDF';
+  document.getElementById('quoteNumber').value = nextQuoteNumber();
+  document.getElementById('quoteDate').value = todayISO();
+  document.getElementById('clientSelect').value = q.clientId;
+  document.getElementById('workDesc').value = q.description || '';
+  document.getElementById('laborCost').value = q.labor || 0;
+  document.getElementById('otherCost').value = q.other || 0;
+  materials = (q.materials || []).map(m => ({ ...m, id: uid() }));
+  renderMaterials();
+  updateTotals();
+  document.querySelector('nav.tabs button[data-tab="presupuesto"]').click();
+}
+
+/* ============================ LOGO ============================ */
+function renderLogoPreview() {
+  const preview = document.getElementById('logoPreview');
+  const btn = document.getElementById('removeLogoBtn');
+  if (logoBase64) {
+    preview.innerHTML = `<img src="${logoBase64}" alt="Logo L&L">`;
+    if (btn) btn.style.display = 'inline-block';
+  } else {
+    preview.innerHTML = '<div style="color: var(--muted); font-size: 13px; text-align: center;">No hay logo cargado.<br>Se usará el logo de texto por defecto en el PDF.</div>';
+    if (btn) btn.style.display = 'none';
+  }
+}
+function handleLogoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    alert('La imagen es muy grande (máximo 2 MB).');
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    logoBase64 = ev.target.result;
+    store.set('ll_logo', logoBase64);
+    renderLogoPreview();
+  };
+  reader.onerror = () => alert('No se pudo leer el archivo.');
+  reader.readAsDataURL(file);
+}
+function removeLogo() {
+  if (!confirm('¿Quitar el logo?')) return;
+  logoBase64 = null;
+  localStorage.removeItem('ll_logo');
+  const input = document.getElementById('logoFile');
+  if (input) input.value = '';
+  renderLogoPreview();
+}
+
+/* ============================ PDF ============================ */
+function drawFallbackTextLogo(doc, margin) {
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(28);
+  doc.text('L&L', margin, 22);
+  doc.setTextColor(34, 184, 207);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('R E N O V A T I O N', margin + 22, 18);
+  doc.setTextColor(255, 212, 59);
+  doc.setFont('helvetica', 'bolditalic');
+  doc.setFontSize(8);
+  doc.text('G R O U P', margin + 22, 24);
+}
+
+function generatePDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('El generador de PDF no está disponible. Verificá tu conexión.');
+    return;
+  }
+  const clientId = document.getElementById('clientSelect').value;
+  const client = clients.find(c => c.id === clientId);
+  if (!client) { alert('Por favor seleccioná un cliente.'); return; }
+
+  const desc = document.getElementById('workDesc').value.trim();
+  if (!desc && materials.length === 0) {
+    alert('Agregá una descripción o al menos un material.');
+    return;
+  }
+
+  const quoteNumber = document.getElementById('quoteNumber').value.trim() || nextQuoteNumber();
+  const quoteDate  = document.getElementById('quoteDate').value || todayISO();
+  const labor = parseFloat(document.getElementById('laborCost').value) || 0;
+  const other = parseFloat(document.getElementById('otherCost').value) || 0;
+  const matTotal = materials.reduce((s, m) => s + (Number(m.qty) || 0) * (Number(m.price) || 0), 0);
+  const total = matTotal + labor + other;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageW = 210, pageH = 297, margin = 14;
+
+  /* --- Header (48mm para dejar espacio al tagline) --- */
+  const headerH = 48;
+  doc.setFillColor(10, 61, 98);
+  doc.rect(0, 0, pageW, headerH, 'F');
+  doc.setFillColor(34, 184, 207);
+  doc.rect(0, headerH, pageW, 2, 'F');
+
+  /* --- Logo (posicionado más arriba para dejar aire abajo) --- */
+  if (logoBase64) {
+    try {
+      const props = doc.getImageProperties(logoBase64);
+      const maxH = 26, maxW = 65;
+      const ratio = Math.min(maxW / props.width, maxH / props.height);
+      const imgW = props.width * ratio;
+      const imgH = props.height * ratio;
+      const imgX = margin;
+      const imgY = (40 - imgH) / 2;
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(imgX - 1.5, imgY - 1.5, imgW + 3, imgH + 3, 2, 2, 'F');
+      const fmt = logoBase64.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      doc.addImage(logoBase64, fmt, imgX, imgY, imgW, imgH);
+    } catch (e) {
+      console.error('Error al insertar logo:', e);
+      drawFallbackTextLogo(doc, margin);
+    }
+  } else {
+    drawFallbackTextLogo(doc, margin);
+  }
+
+  /* --- Datos del presupuesto a la derecha --- */
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('PRESUPUESTO', pageW - margin, 16, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`N° ${quoteNumber}`, pageW - margin, 23, { align: 'right' });
+  doc.text(`Fecha: ${formatDate(quoteDate)}`, pageW - margin, 30, { align: 'right' });
+
+  /* --- Tagline SIEMPRE visible, debajo del logo --- */
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(9);
+  doc.setTextColor(200, 220, 240);
+  doc.text('Multiservicios en chacras, casas y campos', margin, headerH - 5);
+
+  /* ============================================================
+     BLOQUE CLIENTE — CON WRAP AUTOMÁTICO
+     (fix: ahora nombre y dirección/contacto bajan de renglón)
+     ============================================================ */
+  let y = 60;
+  const boxTop = y - 6;
+  const boxWidth = pageW - margin * 2;
+  const innerPad = 5;
+
+  // Medir nombre (por si es largo)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  const nameLines = doc.splitTextToSize(client.name || '', boxWidth - innerPad * 2);
+
+  // Construir y medir contacto (teléfono | email | dirección)
+  const contact = [];
+  if (client.phone)   contact.push('Tel: ' + client.phone);
+  if (client.email)   contact.push('Email: ' + client.email);
+  if (client.address) contact.push('Dir: ' + client.address);
+  const contactText = contact.join('   |   ') || '—';
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const contactLines = doc.splitTextToSize(contactText, boxWidth - innerPad * 2);
+
+  // Calcular posiciones y altura dinámica
+  const nameLineH = 5;
+  const contactLineH = 4.5;
+  const contactTop = 15 + (nameLines.length - 1) * nameLineH;
+  const contactBottom = contactTop + (contactLines.length - 1) * contactLineH;
+  const boxH = contactBottom + 13;
+
+  // Dibujar caja
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(margin, boxTop, boxWidth, boxH, 2, 2, 'FD');
+
+  // Etiqueta CLIENTE
+  doc.setTextColor(10, 61, 98);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('CLIENTE', margin + innerPad, y + 1);
+
+  // Nombre (con wrap)
+  doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text(nameLines, margin + innerPad, y + 8);
+
+  // Contacto (con wrap)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.text(contactLines, margin + innerPad, y + contactTop);
+
+  // Avanzar y según altura real de la caja
+  y = boxTop + boxH + 10;
+
+  /* --- Descripción --- */
+  if (desc) {
+    doc.setTextColor(10, 61, 98);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('DESCRIPCIÓN DEL TRABAJO', margin, y);
+    y += 5;
+    doc.setTextColor(30, 41, 59);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const descLines = doc.splitTextToSize(desc, pageW - margin * 2);
+    doc.text(descLines, margin, y);
+    y += descLines.length * 5 + 6;
+  }
+
+  /* --- Materiales --- */
+  if (materials.length > 0) {
+    doc.setTextColor(10, 61, 98);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('MATERIALES', margin, y);
+    y += 4;
+    doc.autoTable({
+      startY: y,
+      head: [['#', 'Material / Descripción', 'Cant.', 'Precio Unit.', 'Subtotal']],
+      body: materials.map((m, i) => [i + 1, m.desc || '-', String(m.qty), formatMoney(m.price), formatMoney(m.qty * m.price)]),
+      theme: 'grid',
+      headStyles: { fillColor: [10, 61, 98], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 9, textColor: [30, 41, 59] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 30, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: margin, right: margin }
+    });
+    y = ((doc.lastAutoTable && doc.lastAutoTable.finalY) || y + 30) + 8;
+  }
+
+  /* --- Totales --- */
+  const labelX = pageW - margin - 80;
+  const valueX = pageW - margin;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 41, 59);
+  doc.text('Subtotal materiales:', labelX, y);
+  doc.text(formatMoney(matTotal), valueX, y, { align: 'right' });
+  y += 6;
+  doc.text('Mano de obra:', labelX, y);
+  doc.text(formatMoney(labor), valueX, y, { align: 'right' });
+  y += 6;
+  if (other > 0) {
+    doc.text('Otros costos:', labelX, y);
+    doc.text(formatMoney(other), valueX, y, { align: 'right' });
+    y += 6;
+  }
+  doc.setDrawColor(10, 61, 98);
+  doc.setLineWidth(0.5);
+  doc.line(labelX, y, valueX, y);
+  y += 7;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(10, 61, 98);
+  doc.text('TOTAL:', labelX, y);
+  doc.text(formatMoney(total), valueX, y, { align: 'right' });
+
+  /* --- Footer --- */
+  doc.setDrawColor(34, 184, 207);
+  doc.setLineWidth(0.3);
+  doc.line(margin, pageH - 25, pageW - margin, pageH - 25);
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text('Presupuesto válido por 15 días. Los precios pueden variar según disponibilidad de materiales.', pageW / 2, pageH - 18, { align: 'center' });
+  doc.text('Gracias por confiar en L&L Renovation Group.', pageW / 2, pageH - 13, { align: 'center' });
+
+  /* --- Guardar archivo --- */
+  const safeName = client.name.replace(/[^a-z0-9áéíóúñ]/gi, '_');
+  doc.save(`Presupuesto_${quoteNumber}_${safeName}.pdf`);
+
+  /* --- Guardar/Actualizar en historial --- */
+  const snapshot = {
+    quoteNumber,
+    date: quoteDate,
+    clientId: client.id,
+    clientName: client.name,
+    client: { ...client },
+    description: desc,
+    materials: materials.map(m => ({ ...m })),
+    labor, other, matTotal, total
+  };
+
+  if (editingQuoteId) {
+    const idx = quotes.findIndex(q => q.id === editingQuoteId);
+    if (idx >= 0) {
+      quotes[idx] = { ...quotes[idx], ...snapshot, updatedAt: new Date().toISOString() };
+    }
+    editingQuoteId = null;
+    document.getElementById('editBanner').style.display = 'none';
+    document.getElementById('pdfBtn').textContent = '📄 Generar PDF';
+  } else {
+    quotes.push({ ...snapshot, id: uid(), createdAt: new Date().toISOString() });
+  }
+  store.set('ll_quotes', quotes);
+
+  resetForm(true);
+}
+
+/* ============================ HISTORIAL ============================ */
+function renderQuotes() {
+  const list = document.getElementById('quotesList');
+  if (quotes.length === 0) {
+    list.innerHTML = '<div class="empty">No hay presupuestos generados todavía.</div>';
+    return;
+  }
+  const sorted = [...quotes].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  list.innerHTML = sorted.map(q => {
+    const wasModified = q.updatedAt && q.updatedAt !== q.createdAt;
+    return `
+    <div class="client-item">
+      <div class="info">
+        <div class="name">
+          ${escapeHtml(q.quoteNumber)} — ${escapeHtml(q.clientName)}
+          ${wasModified ? '<span class="modified-badge">Modificado</span>' : ''}
+        </div>
+        <div class="details">
+          ${formatDate(q.date)} · Total: <strong>${formatMoney(q.total)}</strong>
+          ${wasModified ? ' · Actualizado: ' + formatDate(q.updatedAt.slice(0,10)) : ''}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary btn-sm" onclick="editQuote('${q.id}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="duplicateQuote('${q.id}')">Duplicar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQuote('${q.id}')">Eliminar</button>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+function deleteQuote(id) {
+  if (!confirm('¿Eliminar este presupuesto del historial?')) return;
+  quotes = quotes.filter(q => q.id !== id);
+  store.set('ll_quotes', quotes);
+  renderQuotes();
+  if (document.getElementById('tab-balance').classList.contains('active')) renderBalance();
+}
+
+/* ============================ BALANCE ============================ */
+function populateBalanceSelectors() {
+  const monthSel = document.getElementById('balanceMonth');
+  const yearSel = document.getElementById('balanceYear');
+
+  if (!monthSel.options.length) {
+    const now = new Date();
+    MONTH_NAMES.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = i + 1;
+      opt.textContent = m;
+      if (i + 1 === now.getMonth() + 1) opt.selected = true;
+      monthSel.appendChild(opt);
+    });
+    monthSel.onchange = renderBalance;
+  }
+
+  const prevSelected = yearSel.value;
+  const years = new Set([new Date().getFullYear()]);
+  quotes.forEach(q => { if (q.date) years.add(parseInt(q.date.split('-')[0])); });
+
+  yearSel.innerHTML = '';
+  Array.from(years).sort((a, b) => b - a).forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if (prevSelected && parseInt(prevSelected) === y) opt.selected = true;
+    yearSel.appendChild(opt);
+  });
+  if (!prevSelected) yearSel.value = new Date().getFullYear();
+  yearSel.onchange = renderBalance;
+}
+
+function renderBalance() {
+  populateBalanceSelectors();
+  const month = parseInt(document.getElementById('balanceMonth').value);
+  const year = parseInt(document.getElementById('balanceYear').value);
+
+  const monthQuotes = quotes.filter(q => {
+    if (!q.date) return false;
+    const [y, m] = q.date.split('-');
+    return parseInt(y) === year && parseInt(m) === month;
+  });
+
+  const total = monthQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
+  const matTotal = monthQuotes.reduce((s, q) => s + (Number(q.matTotal) || 0), 0);
+  const labor = monthQuotes.reduce((s, q) => s + (Number(q.labor) || 0), 0);
+  const other = monthQuotes.reduce((s, q) => s + (Number(q.other) || 0), 0);
+
+  document.getElementById('bTotal').textContent = formatMoney(total);
+  document.getElementById('bMat').textContent = formatMoney(matTotal);
+  document.getElementById('bProfit').textContent = formatMoney(total - matTotal);
+  document.getElementById('bLabor').textContent = formatMoney(labor);
+  document.getElementById('bOther').textContent = formatMoney(other);
+  document.getElementById('bCount').textContent = monthQuotes.length;
+
+  const list = document.getElementById('balanceQuotesList');
+  if (monthQuotes.length === 0) {
+    list.innerHTML = '<div class="empty">No hay presupuestos en este mes.</div>';
+  } else {
+    const sorted = [...monthQuotes].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    list.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th class="right">Materiales</th>
+              <th class="right">Mano Obra</th>
+              <th class="right">Otros</th>
+              <th class="right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map(q => `
+              <tr>
+                <td>${escapeHtml(q.quoteNumber)}</td>
+                <td>${formatDate(q.date)}</td>
+                <td>${escapeHtml(q.clientName)}</td>
+                <td class="right">${formatMoney(q.matTotal)}</td>
+                <td class="right">${formatMoney(q.labor)}</td>
+                <td class="right">${formatMoney(q.other)}</td>
+                <td class="right"><strong>${formatMoney(q.total)}</strong></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  const historyDiv = document.getElementById('balanceHistory');
+  const monthlyData = getMonthlySummary();
+  if (monthlyData.length === 0) {
+    historyDiv.innerHTML = '<div class="empty">No hay datos históricos todavía.</div>';
+  } else {
+    historyDiv.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th class="right">Cant.</th>
+              <th class="right">Facturado (Bruto)</th>
+              <th class="right">Materiales</th>
+              <th class="right">Ganancia Bruta</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${monthlyData.map(row => {
+              const profit = row.total - row.matTotal;
+              return `
+                <tr>
+                  <td><strong>${row.label}</strong></td>
+                  <td class="right">${row.count}</td>
+                  <td class="right">${formatMoney(row.total)}</td>
+                  <td class="right">${formatMoney(row.matTotal)}</td>
+                  <td class="right"><strong style="color: ${profit >= 0 ? 'var(--success)' : 'var(--danger)'};">${formatMoney(profit)}</strong></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+}
+
+function getMonthlySummary() {
+  const map = {};
+  quotes.forEach(q => {
+    if (!q.date) return;
+    const key = q.date.slice(0, 7);
+    if (!map[key]) map[key] = { key, count: 0, total: 0, matTotal: 0, labor: 0, other: 0 };
+    map[key].count++;
+    map[key].total += Number(q.total) || 0;
+    map[key].matTotal += Number(q.matTotal) || 0;
+    map[key].labor += Number(q.labor) || 0;
+    map[key].other += Number(q.other) || 0;
+  });
+  return Object.values(map)
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .map(row => {
+      const [y, m] = row.key.split('-');
+      return { ...row, label: `${MONTH_NAMES[parseInt(m) - 1]} ${y}` };
+    });
+}
+
+/* ============================ EXCEL EXPORT ============================ */
+function exportAllToExcel() {
+  if (!window.XLSX) { alert('La librería de Excel no está disponible. Verificá tu conexión.'); return; }
+  if (clients.length === 0 && quotes.length === 0) {
+    alert('No hay datos para exportar todavía.');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  const clientesData = clients.map(c => ({
+    ID: c.id,
+    Nombre: c.name,
+    'Teléfono': c.phone || '',
+    Email: c.email || '',
+    'Dirección': c.address || '',
+    Notas: c.notes || ''
+  }));
+  const wsCli = XLSX.utils.json_to_sheet(clientesData.length ? clientesData : [{ ID: '', Nombre: '', 'Teléfono': '', Email: '', 'Dirección': '', Notas: '' }]);
+  XLSX.utils.book_append_sheet(wb, wsCli, 'Clientes');
+
+  const presupuestosData = quotes.map(q => ({
+    ID: q.id,
+    'N° Presupuesto': q.quoteNumber,
+    Fecha: q.date,
+    Cliente: q.clientName,
+    'Client ID': q.clientId || '',
+    'Descripción': q.description || '',
+    'Subtotal Materiales': q.matTotal || 0,
+    'Mano de Obra': q.labor || 0,
+    'Otros Costos': q.other || 0,
+    Total: q.total || 0,
+    'Creado el': q.createdAt || '',
+    'Actualizado el': q.updatedAt || ''
+  }));
+  const wsPres = XLSX.utils.json_to_sheet(presupuestosData.length ? presupuestosData : [{ ID: '', 'N° Presupuesto': '', Fecha: '', Cliente: '', 'Client ID': '', 'Descripción': '', 'Subtotal Materiales': 0, 'Mano de Obra': 0, 'Otros Costos': 0, Total: 0, 'Creado el': '', 'Actualizado el': '' }]);
+  XLSX.utils.book_append_sheet(wb, wsPres, 'Presupuestos');
+
+  const materialesData = [];
+  quotes.forEach(q => {
+    (q.materials || []).forEach((m, i) => {
+      materialesData.push({
+        'N° Presupuesto': q.quoteNumber,
+        Item: i + 1,
+        Material: m.desc || '',
+        Cantidad: m.qty || 0,
+        'Precio Unitario': m.price || 0,
+        Subtotal: (Number(m.qty) || 0) * (Number(m.price) || 0)
+      });
+    });
+  });
+  const wsMat = XLSX.utils.json_to_sheet(materialesData.length ? materialesData : [{ 'N° Presupuesto': '', Item: 1, Material: '', Cantidad: 0, 'Precio Unitario': 0, Subtotal: 0 }]);
+  XLSX.utils.book_append_sheet(wb, wsMat, 'Materiales');
+
+  const balanceData = getMonthlySummary().map(row => ({
+    Mes: row.label,
+    'Cantidad Presupuestos': row.count,
+    'Total Bruto': row.total,
+    Materiales: row.matTotal,
+    'Mano de Obra': row.labor,
+    'Otros': row.other,
+    'Ganancia Bruta': row.total - row.matTotal
+  }));
+  const wsBal = XLSX.utils.json_to_sheet(balanceData.length ? balanceData : [{ Mes: '', 'Cantidad Presupuestos': 0, 'Total Bruto': 0, Materiales: 0, 'Mano de Obra': 0, 'Otros': 0, 'Ganancia Bruta': 0 }]);
+  XLSX.utils.book_append_sheet(wb, wsBal, 'Balance');
+
+  const today = todayISO();
+  XLSX.writeFile(wb, `L&L_Backup_${today}.xlsx`);
+}
+
+function exportMonthToExcel() {
+  if (!window.XLSX) { alert('La librería de Excel no está disponible.'); return; }
+  const month = parseInt(document.getElementById('balanceMonth').value);
+  const year = parseInt(document.getElementById('balanceYear').value);
+  const monthQuotes = quotes.filter(q => {
+    if (!q.date) return false;
+    const [y, m] = q.date.split('-');
+    return parseInt(y) === year && parseInt(m) === month;
+  });
+  if (monthQuotes.length === 0) {
+    alert('No hay presupuestos en ese mes para exportar.');
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+  const total = monthQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
+  const matTotal = monthQuotes.reduce((s, q) => s + (Number(q.matTotal) || 0), 0);
+  const labor = monthQuotes.reduce((s, q) => s + (Number(q.labor) || 0), 0);
+  const other = monthQuotes.reduce((s, q) => s + (Number(q.other) || 0), 0);
+
+  const resumen = [
+    { Concepto: 'Mes', Valor: `${MONTH_NAMES[month - 1]} ${year}` },
+    { Concepto: 'Cantidad de presupuestos', Valor: monthQuotes.length },
+    { Concepto: 'Total facturado (bruto)', Valor: total },
+    { Concepto: 'Gastos en materiales', Valor: matTotal },
+    { Concepto: 'Mano de obra', Valor: labor },
+    { Concepto: 'Otros costos', Valor: other },
+    { Concepto: 'Ganancia bruta', Valor: total - matTotal }
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), 'Resumen');
+
+  const detalle = monthQuotes.map(q => ({
+    'N° Presupuesto': q.quoteNumber,
+    Fecha: formatDate(q.date),
+    Cliente: q.clientName,
+    'Descripción': q.description || '',
+    Materiales: q.matTotal || 0,
+    'Mano de Obra': q.labor || 0,
+    'Otros': q.other || 0,
+    Total: q.total || 0
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detalle), 'Detalle');
+
+  XLSX.writeFile(wb, `L&L_Balance_${year}-${String(month).padStart(2, '0')}.xlsx`);
+}
+
+/* ============================ EXCEL IMPORT ============================ */
+function importFromExcel(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!window.XLSX) { alert('La librería de Excel no está disponible.'); return; }
+
+  if (!confirm('⚠️ ATENCIÓN\n\nEsto va a REEMPLAZAR todos los datos actuales (clientes, presupuestos e historial) con los datos del archivo Excel.\n\n¿Querés continuar?')) {
+    e.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const wb = XLSX.read(ev.target.result, { type: 'array' });
+      let importedClients = [];
+      let importedQuotes = [];
+
+      if (wb.SheetNames.includes('Clientes')) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets['Clientes']);
+        importedClients = rows.filter(r => r.Nombre).map(r => ({
+          id: String(r.ID || uid()),
+          name: String(r.Nombre || ''),
+          phone: String(r['Teléfono'] || ''),
+          email: String(r.Email || ''),
+          address: String(r['Dirección'] || ''),
+          notes: String(r.Notas || '')
+        }));
+      }
+
+      if (wb.SheetNames.includes('Presupuestos')) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets['Presupuestos']);
+        importedQuotes = rows.filter(r => r['N° Presupuesto']).map(r => ({
+          id: String(r.ID || uid()),
+          quoteNumber: String(r['N° Presupuesto'] || ''),
+          date: String(r.Fecha || ''),
+          clientName: String(r.Cliente || ''),
+          clientId: String(r['Client ID'] || ''),
+          description: String(r['Descripción'] || ''),
+          matTotal: Number(r['Subtotal Materiales']) || 0,
+          labor: Number(r['Mano de Obra']) || 0,
+          other: Number(r['Otros Costos']) || 0,
+          total: Number(r.Total) || 0,
+          createdAt: String(r['Creado el'] || new Date().toISOString()),
+          updatedAt: r['Actualizado el'] ? String(r['Actualizado el']) : null,
+          materials: []
+        }));
+      }
+
+      if (wb.SheetNames.includes('Materiales')) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets['Materiales']);
+        rows.forEach(r => {
+          const qnum = r['N° Presupuesto'];
+          if (!qnum) return;
+          const quote = importedQuotes.find(q => q.quoteNumber === String(qnum));
+          if (quote) {
+            quote.materials.push({
+              id: uid(),
+              desc: String(r.Material || ''),
+              qty: Number(r.Cantidad) || 0,
+              price: Number(r['Precio Unitario']) || 0
+            });
+          }
+        });
+      }
+
+      clients = importedClients;
+      quotes = importedQuotes;
+      store.set('ll_clients', clients);
+      store.set('ll_quotes', quotes);
+
+      refreshClientSelect();
+      renderClients();
+      renderQuotes();
+      renderBalance();
+      document.getElementById('quoteNumber').value = nextQuoteNumber();
+      document.getElementById('quoteDate').value = todayISO();
+
+      alert(`✅ Importación exitosa.\n\nClientes: ${clients.length}\nPresupuestos: ${quotes.length}`);
+      e.target.value = '';
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error al importar el archivo:\n' + err.message);
+      e.target.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ============================ RESET ============================ */
+function resetForm(silent = false) {
+  if (!silent && !confirm('¿Limpiar el formulario actual?')) return;
+  editingQuoteId = null;
+  document.getElementById('editBanner').style.display = 'none';
+  document.getElementById('pdfBtn').textContent = '📄 Generar PDF';
+  document.getElementById('clientSelect').value = '';
+  document.getElementById('workDesc').value = '';
+  document.getElementById('laborCost').value = 0;
+  document.getElementById('otherCost').value = 0;
+  materials = [];
+  renderMaterials();
+  document.getElementById('quoteNumber').value = nextQuoteNumber();
+  document.getElementById('quoteDate').value = todayISO();
+}
+
+/* ============================ INIT ============================ */
+function init() {
+  document.getElementById('quoteDate').value = todayISO();
+  document.getElementById('quoteNumber').value = nextQuoteNumber();
+  refreshClientSelect();
+  renderMaterials();
+  updateTotals();
+  renderClients();
+  renderLogoPreview();
+  populateBalanceSelectors();
+}
+init();
+</script>
+
+</body>
+</html>
