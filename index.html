@@ -170,10 +170,18 @@
     gap: 12px; flex-wrap: wrap; font-size: 14px;
   }
 
+  .balance-section {
+    margin-bottom: 24px;
+  }
+  .balance-title {
+    font-size: 16px; font-weight: bold; color: var(--primary);
+    margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
   .balance-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px; margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 16px;
   }
   .balance-card {
     padding: 18px; border-radius: 10px;
@@ -189,16 +197,7 @@
     font-size: 11px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.5px; opacity: 0.85; margin-bottom: 8px;
   }
-  .balance-value { font-size: 24px; font-weight: 700; line-height: 1.2; }
-
-  .balance-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px; padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-  .balance-details .item label { margin-bottom: 4px; }
-  .balance-details .item .val { font-size: 16px; font-weight: 600; }
+  .balance-value { font-size: 22px; font-weight: 700; line-height: 1.2; }
 
   .modified-badge {
     display: inline-block; font-size: 10px; padding: 2px 6px;
@@ -215,7 +214,7 @@
     th, td { padding: 8px 6px; font-size: 12px; }
     .client-item { flex-direction: column; align-items: stretch; }
     .client-item .actions { justify-content: flex-end; }
-    .balance-value { font-size: 20px; }
+    .balance-value { font-size: 18px; }
   }
 </style>
 </head>
@@ -247,7 +246,7 @@
 <div class="tab-content active" id="tab-presupuesto">
 
   <div class="edit-banner" id="editBanner">
-    <div>✏️ <strong>Editando presupuesto <span id="editQuoteNum"></span></strong> — al generar el PDF se actualizará el presupuesto original.</div>
+    <div>✏️ <strong>Editando presupuesto <span id="editQuoteNum"></span></strong> — al generar el PDF se actualizará el original.</div>
     <button class="btn btn-sm btn-warning" onclick="cancelEdit()">Cancelar edición</button>
   </div>
 
@@ -261,6 +260,13 @@
       <div>
         <label>Fecha</label>
         <input type="date" id="quoteDate">
+      </div>
+      <div>
+        <label>Moneda</label>
+        <select id="quoteCurrency" onchange="updateTotals()">
+          <option value="UYU">Pesos Uruguayos ($U)</option>
+          <option value="USD">Dólares (U$S)</option>
+        </select>
       </div>
     </div>
     <div class="form-row">
@@ -303,19 +309,19 @@
     <h2>Costos Adicionales</h2>
     <div class="form-row">
       <div>
-        <label>Mano de obra ($)</label>
+        <label>Mano de obra</label>
         <input type="number" id="laborCost" value="0" min="0" step="0.01" oninput="updateTotals()">
       </div>
       <div>
-        <label>Otros costos ($)</label>
+        <label>Otros costos</label>
         <input type="number" id="otherCost" value="0" min="0" step="0.01" oninput="updateTotals()">
       </div>
     </div>
     <div class="totals-box">
-      <div class="row"><span>Materiales</span><span id="totMat">$ 0,00</span></div>
-      <div class="row"><span>Mano de obra</span><span id="totLabor">$ 0,00</span></div>
-      <div class="row"><span>Otros</span><span id="totOther">$ 0,00</span></div>
-      <div class="row total"><span>TOTAL</span><span id="totTotal">$ 0,00</span></div>
+      <div class="row"><span>Materiales</span><span id="totMat">$U 0,00</span></div>
+      <div class="row"><span>Mano de obra</span><span id="totLabor">$U 0,00</span></div>
+      <div class="row"><span>Otros</span><span id="totOther">$U 0,00</span></div>
+      <div class="row total"><span>TOTAL</span><span id="totTotal">$U 0,00</span></div>
     </div>
   </div>
 
@@ -367,32 +373,57 @@
 
   <div class="card">
     <h2>Resumen del Mes</h2>
-    <div class="balance-cards">
-      <div class="balance-card primary">
-        <div class="balance-label">Total Facturado (Bruto)</div>
-        <div class="balance-value" id="bTotal">$ 0,00</div>
-      </div>
-      <div class="balance-card danger">
-        <div class="balance-label">Gastos en Materiales</div>
-        <div class="balance-value" id="bMat" style="color: var(--danger);">$ 0,00</div>
-      </div>
-      <div class="balance-card success">
-        <div class="balance-label">Ganancia Bruta</div>
-        <div class="balance-value" id="bProfit" style="color: var(--success);">$ 0,00</div>
+    
+    <!-- Balance Pesos Uruguayos -->
+    <div class="balance-section">
+      <div class="balance-title">Pesos Uruguayos ($U)</div>
+      <div class="balance-cards">
+        <div class="balance-card primary">
+          <div class="balance-label">Total Facturado (Bruto)</div>
+          <div class="balance-value" id="bTotalUYU">$U 0,00</div>
+        </div>
+        <div class="balance-card danger">
+          <div class="balance-label">Gastos en Materiales</div>
+          <div class="balance-value" id="bMatUYU" style="color: var(--danger);">$U 0,00</div>
+        </div>
+        <div class="balance-card success">
+          <div class="balance-label">Ganancia Bruta</div>
+          <div class="balance-value" id="bProfitUYU" style="color: var(--success);">$U 0,00</div>
+        </div>
       </div>
     </div>
-    <div class="balance-details">
-      <div class="item">
-        <label>Mano de obra</label>
-        <div class="val" id="bLabor">$ 0,00</div>
+
+    <!-- Balance Dólares -->
+    <div class="balance-section">
+      <div class="balance-title">Dólares (U$S)</div>
+      <div class="balance-cards">
+        <div class="balance-card primary">
+          <div class="balance-label">Total Facturado (Bruto)</div>
+          <div class="balance-value" id="bTotalUSD">U$S 0,00</div>
+        </div>
+        <div class="balance-card danger">
+          <div class="balance-label">Gastos en Materiales</div>
+          <div class="balance-value" id="bMatUSD" style="color: var(--danger);">U$S 0,00</div>
+        </div>
+        <div class="balance-card success">
+          <div class="balance-label">Ganancia Bruta</div>
+          <div class="balance-value" id="bProfitUSD" style="color: var(--success);">U$S 0,00</div>
+        </div>
       </div>
-      <div class="item">
-        <label>Otros costos</label>
-        <div class="val" id="bOther">$ 0,00</div>
+    </div>
+
+    <div style="padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap;">
+      <div>
+        <label>Mano de obra ($U)</label>
+        <div style="font-weight: 600; font-size: 15px;" id="bLaborUYU">$U 0,00</div>
       </div>
-      <div class="item">
-        <label>Cantidad presupuestos</label>
-        <div class="val" id="bCount">0</div>
+      <div>
+        <label>Mano de obra (U$S)</label>
+        <div style="font-weight: 600; font-size: 15px;" id="bLaborUSD">U$S 0,00</div>
+      </div>
+      <div>
+        <label>Cant. presupuestos</label>
+        <div style="font-weight: 600; font-size: 15px;" id="bCount">0</div>
       </div>
     </div>
   </div>
@@ -400,11 +431,6 @@
   <div class="card">
     <h2>Detalle de Presupuestos del Mes</h2>
     <div id="balanceQuotesList"></div>
-  </div>
-
-  <div class="card">
-    <h2>Histórico Mensual</h2>
-    <div id="balanceHistory"></div>
   </div>
 
 </div>
@@ -471,7 +497,7 @@
     <div class="form-row">
       <div>
         <label>Teléfono</label>
-        <input type="text" id="clientPhone" placeholder="Ej: 11 2345-6789">
+        <input type="text" id="clientPhone" placeholder="Ej: 099 123 456">
       </div>
       <div>
         <label>Email</label>
@@ -514,9 +540,13 @@ let logoBase64 = store.get('ll_logo', null);
 let editingQuoteId = null;
 
 /* ============================ UTILS ============================ */
-function formatMoney(n) {
+function formatMoney(n, currency = 'UYU') {
   n = Number(n) || 0;
-  return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (currency === 'USD') {
+    return 'U$S ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  // Por defecto Pesos Uruguayos
+  return '$U ' + n.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
@@ -648,13 +678,15 @@ function updateMaterial(id, field, value) {
   if (!m) return;
   if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
   m[field] = value;
+  const curr = document.getElementById('quoteCurrency').value;
   const row = document.querySelector(`[data-mat-row="${id}"]`);
-  if (row) row.querySelector('.subtotal').textContent = formatMoney(m.qty * m.price);
+  if (row) row.querySelector('.subtotal').textContent = formatMoney(m.qty * m.price, curr);
   updateTotals();
 }
 function renderMaterials() {
   const body = document.getElementById('materialsBody');
   const empty = document.getElementById('materialsEmpty');
+  const curr = document.getElementById('quoteCurrency').value;
   if (materials.length === 0) {
     body.innerHTML = '';
     empty.style.display = 'block';
@@ -665,7 +697,7 @@ function renderMaterials() {
         <td><input type="text" value="${escapeHtml(m.desc)}" placeholder="Ej: Cemento 50kg" oninput="updateMaterial('${m.id}', 'desc', this.value)"></td>
         <td><input type="number" min="0" step="0.01" value="${m.qty}" oninput="updateMaterial('${m.id}', 'qty', this.value)"></td>
         <td><input type="number" min="0" step="0.01" value="${m.price}" oninput="updateMaterial('${m.id}', 'price', this.value)"></td>
-        <td class="subtotal right">${formatMoney(m.qty * m.price)}</td>
+        <td class="subtotal right">${formatMoney(m.qty * m.price, curr)}</td>
         <td style="text-align:center;"><button class="btn btn-danger btn-sm" onclick="removeMaterialRow('${m.id}')" title="Eliminar">✕</button></td>
       </tr>
     `).join('');
@@ -673,13 +705,14 @@ function renderMaterials() {
   updateTotals();
 }
 function updateTotals() {
+  const curr = document.getElementById('quoteCurrency').value;
   const matTotal = materials.reduce((s, m) => s + (Number(m.qty) || 0) * (Number(m.price) || 0), 0);
   const labor = parseFloat(document.getElementById('laborCost').value) || 0;
   const other = parseFloat(document.getElementById('otherCost').value) || 0;
-  document.getElementById('totMat').textContent = formatMoney(matTotal);
-  document.getElementById('totLabor').textContent = formatMoney(labor);
-  document.getElementById('totOther').textContent = formatMoney(other);
-  document.getElementById('totTotal').textContent = formatMoney(matTotal + labor + other);
+  document.getElementById('totMat').textContent = formatMoney(matTotal, curr);
+  document.getElementById('totLabor').textContent = formatMoney(labor, curr);
+  document.getElementById('totOther').textContent = formatMoney(other, curr);
+  document.getElementById('totTotal').textContent = formatMoney(matTotal + labor + other, curr);
 }
 
 /* ============================ EDIT MODE ============================ */
@@ -690,6 +723,7 @@ function editQuote(id) {
 
   document.getElementById('quoteNumber').value = q.quoteNumber;
   document.getElementById('quoteDate').value = q.date;
+  document.getElementById('quoteCurrency').value = q.currency || 'UYU';
   document.getElementById('clientSelect').value = q.clientId;
   document.getElementById('workDesc').value = q.description || '';
   document.getElementById('laborCost').value = q.labor || 0;
@@ -719,6 +753,7 @@ function duplicateQuote(id) {
   document.getElementById('pdfBtn').textContent = '📄 Generar PDF';
   document.getElementById('quoteNumber').value = nextQuoteNumber();
   document.getElementById('quoteDate').value = todayISO();
+  document.getElementById('quoteCurrency').value = q.currency || 'UYU';
   document.getElementById('clientSelect').value = q.clientId;
   document.getElementById('workDesc').value = q.description || '';
   document.getElementById('laborCost').value = q.labor || 0;
@@ -800,6 +835,8 @@ function generatePDF() {
 
   const quoteNumber = document.getElementById('quoteNumber').value.trim() || nextQuoteNumber();
   const quoteDate  = document.getElementById('quoteDate').value || todayISO();
+  const currency   = document.getElementById('quoteCurrency').value;
+  
   const labor = parseFloat(document.getElementById('laborCost').value) || 0;
   const other = parseFloat(document.getElementById('otherCost').value) || 0;
   const matTotal = materials.reduce((s, m) => s + (Number(m.qty) || 0) * (Number(m.price) || 0), 0);
@@ -809,14 +846,13 @@ function generatePDF() {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageW = 210, pageH = 297, margin = 14;
 
-  /* --- Header (48mm para dejar espacio al tagline) --- */
+  /* --- Header --- */
   const headerH = 48;
   doc.setFillColor(10, 61, 98);
   doc.rect(0, 0, pageW, headerH, 'F');
   doc.setFillColor(34, 184, 207);
   doc.rect(0, headerH, pageW, 2, 'F');
 
-  /* --- Logo (posicionado más arriba para dejar aire abajo) --- */
   if (logoBase64) {
     try {
       const props = doc.getImageProperties(logoBase64);
@@ -838,7 +874,6 @@ function generatePDF() {
     drawFallbackTextLogo(doc, margin);
   }
 
-  /* --- Datos del presupuesto a la derecha --- */
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
@@ -848,27 +883,21 @@ function generatePDF() {
   doc.text(`N° ${quoteNumber}`, pageW - margin, 23, { align: 'right' });
   doc.text(`Fecha: ${formatDate(quoteDate)}`, pageW - margin, 30, { align: 'right' });
 
-  /* --- Tagline SIEMPRE visible, debajo del logo --- */
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(9);
   doc.setTextColor(200, 220, 240);
   doc.text('Multiservicios en chacras, casas y campos', margin, headerH - 5);
 
-  /* ============================================================
-     BLOQUE CLIENTE — CON WRAP AUTOMÁTICO
-     (fix: ahora nombre y dirección/contacto bajan de renglón)
-     ============================================================ */
+  /* --- Cliente --- */
   let y = 60;
   const boxTop = y - 6;
   const boxWidth = pageW - margin * 2;
   const innerPad = 5;
 
-  // Medir nombre (por si es largo)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   const nameLines = doc.splitTextToSize(client.name || '', boxWidth - innerPad * 2);
 
-  // Construir y medir contacto (teléfono | email | dirección)
   const contact = [];
   if (client.phone)   contact.push('Tel: ' + client.phone);
   if (client.email)   contact.push('Email: ' + client.email);
@@ -879,37 +908,31 @@ function generatePDF() {
   doc.setFontSize(9);
   const contactLines = doc.splitTextToSize(contactText, boxWidth - innerPad * 2);
 
-  // Calcular posiciones y altura dinámica
   const nameLineH = 5;
   const contactLineH = 4.5;
   const contactTop = 15 + (nameLines.length - 1) * nameLineH;
   const contactBottom = contactTop + (contactLines.length - 1) * contactLineH;
   const boxH = contactBottom + 13;
 
-  // Dibujar caja
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
   doc.roundedRect(margin, boxTop, boxWidth, boxH, 2, 2, 'FD');
 
-  // Etiqueta CLIENTE
   doc.setTextColor(10, 61, 98);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.text('CLIENTE', margin + innerPad, y + 1);
 
-  // Nombre (con wrap)
   doc.setTextColor(30, 41, 59);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(nameLines, margin + innerPad, y + 8);
 
-  // Contacto (con wrap)
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
   doc.text(contactLines, margin + innerPad, y + contactTop);
 
-  // Avanzar y según altura real de la caja
   y = boxTop + boxH + 10;
 
   /* --- Descripción --- */
@@ -937,7 +960,7 @@ function generatePDF() {
     doc.autoTable({
       startY: y,
       head: [['#', 'Material / Descripción', 'Cant.', 'Precio Unit.', 'Subtotal']],
-      body: materials.map((m, i) => [i + 1, m.desc || '-', String(m.qty), formatMoney(m.price), formatMoney(m.qty * m.price)]),
+      body: materials.map((m, i) => [i + 1, m.desc || '-', String(m.qty), formatMoney(m.price, currency), formatMoney(m.qty * m.price, currency)]),
       theme: 'grid',
       headStyles: { fillColor: [10, 61, 98], textColor: 255, fontSize: 9, fontStyle: 'bold' },
       bodyStyles: { fontSize: 9, textColor: [30, 41, 59] },
@@ -945,8 +968,8 @@ function generatePDF() {
       columnStyles: {
         0: { cellWidth: 10, halign: 'center' },
         2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 30, halign: 'right' },
-        4: { cellWidth: 30, halign: 'right' }
+        3: { cellWidth: 32, halign: 'right' },
+        4: { cellWidth: 32, halign: 'right' }
       },
       margin: { left: margin, right: margin }
     });
@@ -960,14 +983,14 @@ function generatePDF() {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 41, 59);
   doc.text('Subtotal materiales:', labelX, y);
-  doc.text(formatMoney(matTotal), valueX, y, { align: 'right' });
+  doc.text(formatMoney(matTotal, currency), valueX, y, { align: 'right' });
   y += 6;
   doc.text('Mano de obra:', labelX, y);
-  doc.text(formatMoney(labor), valueX, y, { align: 'right' });
+  doc.text(formatMoney(labor, currency), valueX, y, { align: 'right' });
   y += 6;
   if (other > 0) {
     doc.text('Otros costos:', labelX, y);
-    doc.text(formatMoney(other), valueX, y, { align: 'right' });
+    doc.text(formatMoney(other, currency), valueX, y, { align: 'right' });
     y += 6;
   }
   doc.setDrawColor(10, 61, 98);
@@ -978,7 +1001,7 @@ function generatePDF() {
   doc.setFontSize(14);
   doc.setTextColor(10, 61, 98);
   doc.text('TOTAL:', labelX, y);
-  doc.text(formatMoney(total), valueX, y, { align: 'right' });
+  doc.text(formatMoney(total, currency), valueX, y, { align: 'right' });
 
   /* --- Footer --- */
   doc.setDrawColor(34, 184, 207);
@@ -998,6 +1021,7 @@ function generatePDF() {
   const snapshot = {
     quoteNumber,
     date: quoteDate,
+    currency,
     clientId: client.id,
     clientName: client.name,
     client: { ...client },
@@ -1032,6 +1056,7 @@ function renderQuotes() {
   const sorted = [...quotes].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   list.innerHTML = sorted.map(q => {
     const wasModified = q.updatedAt && q.updatedAt !== q.createdAt;
+    const curr = q.currency || 'UYU';
     return `
     <div class="client-item">
       <div class="info">
@@ -1040,7 +1065,7 @@ function renderQuotes() {
           ${wasModified ? '<span class="modified-badge">Modificado</span>' : ''}
         </div>
         <div class="details">
-          ${formatDate(q.date)} · Total: <strong>${formatMoney(q.total)}</strong>
+          ${formatDate(q.date)} · Total: <strong>${formatMoney(q.total, curr)}</strong>
           ${wasModified ? ' · Actualizado: ' + formatDate(q.updatedAt.slice(0,10)) : ''}
         </div>
       </div>
@@ -1105,18 +1130,33 @@ function renderBalance() {
     return parseInt(y) === year && parseInt(m) === month;
   });
 
-  const total = monthQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
-  const matTotal = monthQuotes.reduce((s, q) => s + (Number(q.matTotal) || 0), 0);
-  const labor = monthQuotes.reduce((s, q) => s + (Number(q.labor) || 0), 0);
-  const other = monthQuotes.reduce((s, q) => s + (Number(q.other) || 0), 0);
+  // Separar por moneda
+  const uyuQuotes = monthQuotes.filter(q => (q.currency || 'UYU') === 'UYU');
+  const usdQuotes = monthQuotes.filter(q => q.currency === 'USD');
 
-  document.getElementById('bTotal').textContent = formatMoney(total);
-  document.getElementById('bMat').textContent = formatMoney(matTotal);
-  document.getElementById('bProfit').textContent = formatMoney(total - matTotal);
-  document.getElementById('bLabor').textContent = formatMoney(labor);
-  document.getElementById('bOther').textContent = formatMoney(other);
+  // Totales UYU
+  const totUYU = uyuQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
+  const matUYU = uyuQuotes.reduce((s, q) => s + (Number(q.matTotal) || 0), 0);
+  const labUYU = uyuQuotes.reduce((s, q) => s + (Number(q.labor) || 0), 0);
+
+  document.getElementById('bTotalUYU').textContent = formatMoney(totUYU, 'UYU');
+  document.getElementById('bMatUYU').textContent = formatMoney(matUYU, 'UYU');
+  document.getElementById('bProfitUYU').textContent = formatMoney(totUYU - matUYU, 'UYU');
+  document.getElementById('bLaborUYU').textContent = formatMoney(labUYU, 'UYU');
+
+  // Totales USD
+  const totUSD = usdQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
+  const matUSD = usdQuotes.reduce((s, q) => s + (Number(q.matTotal) || 0), 0);
+  const labUSD = usdQuotes.reduce((s, q) => s + (Number(q.labor) || 0), 0);
+
+  document.getElementById('bTotalUSD').textContent = formatMoney(totUSD, 'USD');
+  document.getElementById('bMatUSD').textContent = formatMoney(matUSD, 'USD');
+  document.getElementById('bProfitUSD').textContent = formatMoney(totUSD - matUSD, 'USD');
+  document.getElementById('bLaborUSD').textContent = formatMoney(labUSD, 'USD');
+
   document.getElementById('bCount').textContent = monthQuotes.length;
 
+  // Detalle del mes
   const list = document.getElementById('balanceQuotesList');
   if (monthQuotes.length === 0) {
     list.innerHTML = '<div class="empty">No hay presupuestos en este mes.</div>';
@@ -1130,85 +1170,31 @@ function renderBalance() {
               <th>N°</th>
               <th>Fecha</th>
               <th>Cliente</th>
+              <th>Moneda</th>
               <th class="right">Materiales</th>
               <th class="right">Mano Obra</th>
-              <th class="right">Otros</th>
               <th class="right">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${sorted.map(q => `
+            ${sorted.map(q => {
+              const c = q.currency || 'UYU';
+              return `
               <tr>
                 <td>${escapeHtml(q.quoteNumber)}</td>
                 <td>${formatDate(q.date)}</td>
                 <td>${escapeHtml(q.clientName)}</td>
-                <td class="right">${formatMoney(q.matTotal)}</td>
-                <td class="right">${formatMoney(q.labor)}</td>
-                <td class="right">${formatMoney(q.other)}</td>
-                <td class="right"><strong>${formatMoney(q.total)}</strong></td>
+                <td><span style="font-size: 11px; font-weight: bold; padding: 2px 6px; background: #e2e8f0; border-radius: 4px;">${c}</span></td>
+                <td class="right">${formatMoney(q.matTotal, c)}</td>
+                <td class="right">${formatMoney(q.labor, c)}</td>
+                <td class="right"><strong>${formatMoney(q.total, c)}</strong></td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
       </div>
     `;
   }
-
-  const historyDiv = document.getElementById('balanceHistory');
-  const monthlyData = getMonthlySummary();
-  if (monthlyData.length === 0) {
-    historyDiv.innerHTML = '<div class="empty">No hay datos históricos todavía.</div>';
-  } else {
-    historyDiv.innerHTML = `
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Mes</th>
-              <th class="right">Cant.</th>
-              <th class="right">Facturado (Bruto)</th>
-              <th class="right">Materiales</th>
-              <th class="right">Ganancia Bruta</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${monthlyData.map(row => {
-              const profit = row.total - row.matTotal;
-              return `
-                <tr>
-                  <td><strong>${row.label}</strong></td>
-                  <td class="right">${row.count}</td>
-                  <td class="right">${formatMoney(row.total)}</td>
-                  <td class="right">${formatMoney(row.matTotal)}</td>
-                  <td class="right"><strong style="color: ${profit >= 0 ? 'var(--success)' : 'var(--danger)'};">${formatMoney(profit)}</strong></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-}
-
-function getMonthlySummary() {
-  const map = {};
-  quotes.forEach(q => {
-    if (!q.date) return;
-    const key = q.date.slice(0, 7);
-    if (!map[key]) map[key] = { key, count: 0, total: 0, matTotal: 0, labor: 0, other: 0 };
-    map[key].count++;
-    map[key].total += Number(q.total) || 0;
-    map[key].matTotal += Number(q.matTotal) || 0;
-    map[key].labor += Number(q.labor) || 0;
-    map[key].other += Number(q.other) || 0;
-  });
-  return Object.values(map)
-    .sort((a, b) => b.key.localeCompare(a.key))
-    .map(row => {
-      const [y, m] = row.key.split('-');
-      return { ...row, label: `${MONTH_NAMES[parseInt(m) - 1]} ${y}` };
-    });
 }
 
 /* ============================ EXCEL EXPORT ============================ */
@@ -1235,6 +1221,7 @@ function exportAllToExcel() {
     ID: q.id,
     'N° Presupuesto': q.quoteNumber,
     Fecha: q.date,
+    Moneda: q.currency || 'UYU',
     Cliente: q.clientName,
     'Client ID': q.clientId || '',
     'Descripción': q.description || '',
@@ -1245,7 +1232,7 @@ function exportAllToExcel() {
     'Creado el': q.createdAt || '',
     'Actualizado el': q.updatedAt || ''
   }));
-  const wsPres = XLSX.utils.json_to_sheet(presupuestosData.length ? presupuestosData : [{ ID: '', 'N° Presupuesto': '', Fecha: '', Cliente: '', 'Client ID': '', 'Descripción': '', 'Subtotal Materiales': 0, 'Mano de Obra': 0, 'Otros Costos': 0, Total: 0, 'Creado el': '', 'Actualizado el': '' }]);
+  const wsPres = XLSX.utils.json_to_sheet(presupuestosData.length ? presupuestosData : [{ ID: '', 'N° Presupuesto': '', Fecha: '', Moneda: '', Cliente: '', 'Client ID': '', 'Descripción': '', 'Subtotal Materiales': 0, 'Mano de Obra': 0, 'Otros Costos': 0, Total: 0, 'Creado el': '', 'Actualizado el': '' }]);
   XLSX.utils.book_append_sheet(wb, wsPres, 'Presupuestos');
 
   const materialesData = [];
@@ -1253,6 +1240,7 @@ function exportAllToExcel() {
     (q.materials || []).forEach((m, i) => {
       materialesData.push({
         'N° Presupuesto': q.quoteNumber,
+        Moneda: q.currency || 'UYU',
         Item: i + 1,
         Material: m.desc || '',
         Cantidad: m.qty || 0,
@@ -1261,20 +1249,8 @@ function exportAllToExcel() {
       });
     });
   });
-  const wsMat = XLSX.utils.json_to_sheet(materialesData.length ? materialesData : [{ 'N° Presupuesto': '', Item: 1, Material: '', Cantidad: 0, 'Precio Unitario': 0, Subtotal: 0 }]);
+  const wsMat = XLSX.utils.json_to_sheet(materialesData.length ? materialesData : [{ 'N° Presupuesto': '', Moneda: '', Item: 1, Material: '', Cantidad: 0, 'Precio Unitario': 0, Subtotal: 0 }]);
   XLSX.utils.book_append_sheet(wb, wsMat, 'Materiales');
-
-  const balanceData = getMonthlySummary().map(row => ({
-    Mes: row.label,
-    'Cantidad Presupuestos': row.count,
-    'Total Bruto': row.total,
-    Materiales: row.matTotal,
-    'Mano de Obra': row.labor,
-    'Otros': row.other,
-    'Ganancia Bruta': row.total - row.matTotal
-  }));
-  const wsBal = XLSX.utils.json_to_sheet(balanceData.length ? balanceData : [{ Mes: '', 'Cantidad Presupuestos': 0, 'Total Bruto': 0, Materiales: 0, 'Mano de Obra': 0, 'Otros': 0, 'Ganancia Bruta': 0 }]);
-  XLSX.utils.book_append_sheet(wb, wsBal, 'Balance');
 
   const today = todayISO();
   XLSX.writeFile(wb, `L&L_Backup_${today}.xlsx`);
@@ -1295,33 +1271,22 @@ function exportMonthToExcel() {
   }
 
   const wb = XLSX.utils.book_new();
-  const total = monthQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
-  const matTotal = monthQuotes.reduce((s, q) => s + (Number(q.matTotal) || 0), 0);
-  const labor = monthQuotes.reduce((s, q) => s + (Number(q.labor) || 0), 0);
-  const other = monthQuotes.reduce((s, q) => s + (Number(q.other) || 0), 0);
-
-  const resumen = [
-    { Concepto: 'Mes', Valor: `${MONTH_NAMES[month - 1]} ${year}` },
-    { Concepto: 'Cantidad de presupuestos', Valor: monthQuotes.length },
-    { Concepto: 'Total facturado (bruto)', Valor: total },
-    { Concepto: 'Gastos en materiales', Valor: matTotal },
-    { Concepto: 'Mano de obra', Valor: labor },
-    { Concepto: 'Otros costos', Valor: other },
-    { Concepto: 'Ganancia bruta', Valor: total - matTotal }
-  ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), 'Resumen');
-
-  const detalle = monthQuotes.map(q => ({
-    'N° Presupuesto': q.quoteNumber,
-    Fecha: formatDate(q.date),
-    Cliente: q.clientName,
-    'Descripción': q.description || '',
-    Materiales: q.matTotal || 0,
-    'Mano de Obra': q.labor || 0,
-    'Otros': q.other || 0,
-    Total: q.total || 0
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detalle), 'Detalle');
+  
+  const detalle = monthQuotes.map(q => {
+    const c = q.currency || 'UYU';
+    return {
+      'N° Presupuesto': q.quoteNumber,
+      Fecha: formatDate(q.date),
+      Moneda: c,
+      Cliente: q.clientName,
+      'Descripción': q.description || '',
+      Materiales: q.matTotal || 0,
+      'Mano de Obra': q.labor || 0,
+      'Otros': q.other || 0,
+      Total: q.total || 0
+    };
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detalle), 'Detalle del Mes');
 
   XLSX.writeFile(wb, `L&L_Balance_${year}-${String(month).padStart(2, '0')}.xlsx`);
 }
@@ -1362,6 +1327,7 @@ function importFromExcel(e) {
           id: String(r.ID || uid()),
           quoteNumber: String(r['N° Presupuesto'] || ''),
           date: String(r.Fecha || ''),
+          currency: String(r.Moneda || 'UYU'), // Nuevo campo
           clientName: String(r.Cliente || ''),
           clientId: String(r['Client ID'] || ''),
           description: String(r['Descripción'] || ''),
